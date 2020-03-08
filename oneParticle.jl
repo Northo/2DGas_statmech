@@ -26,7 +26,7 @@ initial_vals = initial_values(num_particles, radius)
 
 for (i,dt) in enumerate(dt_list)
     num_iterations = floor(Int, total_time / dt)
-    pos, vel = billiard2(
+    pos, vel = billiard(
         num_particles,
         num_iterations,
         radius,
