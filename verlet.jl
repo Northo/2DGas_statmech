@@ -5,13 +5,32 @@ function initial_values(numberOfParticles, radius)
 end
 
 
+function lennard_jones(pos1_x, pos1_y, pos2_x, pos2_y, epsilon)
+    """Calculates the lennard_jones force"""
+
+    dx = pos2_x - pos1_x
+    dy = pos2_y - pos1_y
+
+    distance = sqrt(
+        (dx)^2 + (dy)^2
+    )
+    if distance > 1
+        return [0, 0]
+    else
+        strength = 12*epsilon * (1/distance^13 - 1/distance^7)
+        return [dx, dy] * strength
+    end
+end
+
+
 function billiard(
     numberOfParticles,
     numberOfIterations,
     radius,
     dt,
     KK;
-    initial_value=nothing
+    initial_value=nothing,
+    epsilon=1,
 )
 
     if (isnothing(initial_value))
@@ -34,6 +53,20 @@ function billiard(
             acceleration = [0, 0]
         end
 
+        for k in 1:numberOfParticles
+            if k==j
+                continue
+            end
+            lennard_jones_force = lennard_jones(
+                pos[1, j, i],
+                pos[2, j, i],
+                pos[1, k, i],
+                pos[2, k, i],
+                epsilon,
+            )
+            acceleration += lennard_jones_force
+        end
+
         pos[:, j, i+1] = pos[:, j, i] + velocity[:, j, i]*dt + acceleration*dt^2 / 2
 
         distance = sqrt(pos[1, j, i+1]^2 + pos[2, j, i+1]^2)
@@ -41,6 +74,20 @@ function billiard(
             acceleration2 = -KK * ((distance - radius)/distance) * pos[:, j, i+1]
         else
             acceleration2 = [0, 0]
+        end
+
+        for k in 1:numberOfParticles
+            if k==j
+                continue
+            end
+            lennard_jones_force = lennard_jones(
+                pos[1, j, i+1],
+                pos[2, j, i+1],
+                pos[1, k, i],
+                pos[2, k, i],
+                epsilon,
+            )
+            acceleration2 += lennard_jones_force
         end
 
         velocity[:, j, i+1] = velocity[:, j, i] + (acceleration + acceleration2)/2 * dt
