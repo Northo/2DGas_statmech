@@ -17,10 +17,12 @@ total_time = 200
 ################
 # Calculations #
 ################
-dt_list = [0.005, 0.01, 0.05, 0.1]
+dt_list = [0.005, 0.01, 0.05, 0.1, 0.6]
 
 positions = []
 velocities = []
+
+initial_vals = initial_values(num_particles, radius)
 
 for (i,dt) in enumerate(dt_list)
     num_iterations = floor(Int, total_time / dt)
@@ -30,6 +32,7 @@ for (i,dt) in enumerate(dt_list)
         radius,
         dt,
         KK,
+        initial_value=initial_vals
     )
 
     push!(positions, pos)

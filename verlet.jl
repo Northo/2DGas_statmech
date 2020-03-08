@@ -30,13 +30,30 @@ function billiard(numberOfParticles, numberOfIterations, radius, dt, KK)
 end
 
 
-function billiard2(numberOfParticles, numberOfIterations, radius, dt, KK)
+function initial_values(numberOfParticles, radius)
+    pos = rand((-radius:radius), 2, numberOfParticles)
+    angles = rand((-pi:pi), numberOfParticles)
+    return pos, angles
+end
+
+
+function billiard2(
+    numberOfParticles,
+    numberOfIterations,
+    radius,
+    dt,
+    KK;
+    initial_value=nothing
+)
+
+    if (isnothing(initial_value))
+        initial_value = initial_values(numberOfParticles, radius)
+    end
     pos = zeros(2, numberOfParticles, numberOfIterations+1)
-    pos[1,:,1] = rand((-radius:radius), numberOfParticles)
-    pos[2,:,1] = rand((-radius:radius), numberOfParticles)
     velocity = Array{Float64, 3}(undef, 2, numberOfParticles, numberOfIterations+1)
 
-    angles = rand((-pi:pi), numberOfParticles)
+    pos[:, :, 1], angles = initial_value
+
     vx = cos.(angles)
     vy = sin.(angles)
     velocity[:, :, 1] = transpose([vx vy])
