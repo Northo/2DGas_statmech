@@ -3,9 +3,12 @@
 include("utils.jl")
 using Statistics  # Used for mean
 using Distributions  # fit
+using DelimitedFiles
 #########
 # Setup #
 #########
+SAVE_DATA = true
+DATA_DIR = "datadir/"
 
 num_particles = 10
 radius = 10
@@ -64,7 +67,13 @@ vel_x = real.(vel)
 
 ## Estimating velocity distribution ##
 velocity_distribution = collect(Iterators.flatten(vel_x))
-fit_velocity_distribution = fit(Normal, velocity_distribution)
+try
+    fit_velocity_distribution = fit(Normal, velocity_distribution)
+catch e
+    println("Was unable to fit curve, error: ", e)
+    fit_veloctiy_distribution = Normal(0, 1)
+end
+
 μ, σ = fit_velocity_distribution.μ, fit_velocity_distribution.σ
 #println("Fitted: ", μ, σ)
 println("Mean of vel_x: ", mean(vel_x))
@@ -75,6 +84,13 @@ println("RMS of x: ", sqrt(mean(x->x^2, x)))
 ###################
 # Writing results #
 ###################
+if SAVE_DATA
+    filename = string(DATA_DIR, "pos_vel_num_particles_", num_particles, "_num_iterations_", num_iterations, ".txt")
+    println("Writing data to file...")
+    open(filename, "w") do file
+        writedlm(file, [pos, vel])
+    end
+end
 
 ############
 # Plotting #
