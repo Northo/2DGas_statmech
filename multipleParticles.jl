@@ -41,20 +41,17 @@ pos, vel = billiard(
 
 # Numerical validation
 println("Calculating energy for validation...")
-x, y = pos[1, :, :], pos[2, :, :]  # x and y still has dimensions for particles and iterations!
-vel_x, vel_y = vel[1, :, :], pos[2, :, :]
 
-engy = energy.(x, y, vel_x, vel_y, radius, KK)  # Not including interactions between particles
+engy = energy.(pos, vel, radius, KK)  # Not including interactions between particles
+
 interaction_energy = zero(engy)
 for i in 1:num_particles, j in 1:num_particles
     if i==j
         continue
     end
     interaction_energy[i, :] += lennard_jones_potential.(
-        x[i, :],
-        y[i, :],
-        x[j, :],
-        y[j, :],
+        pos[i, :],
+        pos[j, :],
         epsilon,
     )
 end
@@ -62,10 +59,11 @@ end
 total_energy = sum(engy + interaction_energy, dims=2)
 relative_energy_error = (total_energy .- total_energy[1]) ./ total_energy[1]
 
+x = real.(pos)
+vel_x = real.(vel)
 
 ## Estimating velocity distribution ##
 velocity_distribution = collect(Iterators.flatten(vel_x))
-println(typeof(velocity_distribution))
 fit_velocity_distribution = fit(Normal, velocity_distribution)
 μ, σ = fit_velocity_distribution.μ, fit_velocity_distribution.σ
 #println("Fitted: ", μ, σ)
@@ -89,7 +87,7 @@ println("PyPlot loaded.")
 ## Trajectory ##
 trajectory_fig, trajectory_ax = plt.subplots()
 for i in 1:num_particles
-    trajectory_ax.plot(pos[1, i, 1:100:end], pos[2, i, 1:100:end], label=string("Particle", i))
+    trajectory_ax.plot(real(pos[i, 1:100:end]), imag(pos[i, 1:100:end]), label=string("Particle", i))
 end
 
 circ=plt.Circle((0, 0), radius=radius, fill=false)

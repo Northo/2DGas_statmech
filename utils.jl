@@ -1,34 +1,28 @@
 function initial_values(numberOfParticles, radius)
-    pos = rand((-radius:radius), 2, numberOfParticles)
+    radii = rand((0.0:radius), numberOfParticles)
+    radii = complex.(0, radii)
     angles = rand((-pi:pi), numberOfParticles)
-    return pos, angles
+    pos = radii .* exp.(complex.(0, angles))
+
+    angles_vel = rand((-pi:pi), numberOfParticles)
+    return pos, angles_vel
 end
 
 
-function lennard_jones(pos1_x, pos1_y, pos2_x, pos2_y, epsilon)
+function lennard_jones(pos1, pos2, epsilon)
     """Calculates the lennard_jones force"""
+    distance = abs(pos2 - pos1)
 
-    dx = pos2_x - pos1_x
-    dy = pos2_y - pos1_y
-
-    distance = sqrt(
-        (dx)^2 + (dy)^2
-    )
     if distance > 1
-        return [0, 0]
+        return 0
     else
         strength = 12*epsilon * (-1/distance^13 + 1/distance^7)
-        return [dx, dy] * strength
+        return (pos2 - pos1) * strength
     end
 end
 
-function lennard_jones_potential(pos1_x, pos1_y, pos2_x, pos2_y, epsilon)
-    dx = pos2_x - pos1_x
-    dy = pos2_y - pos1_y
-
-    distance = sqrt(
-        (dx)^2 + (dy)^2
-    )
+function lennard_jones_potential(pos1, pos2, epsilon)
+    distance = abs(pos2 - pos1)
     if distance > 1
         return 0
     else
@@ -49,22 +43,20 @@ function billiard(
     if (isnothing(initial_value))
         initial_value = initial_values(numberOfParticles, radius)
     end
-    pos = zeros(2, numberOfParticles, numberOfIterations+1)
-    velocity = Array{Float64, 3}(undef, 2, numberOfParticles, numberOfIterations+1)
+    pos = zeros(Complex, numberOfParticles, numberOfIterations+1)
+    velocity = Array{Complex, 2}(undef, numberOfParticles, numberOfIterations+1)
 
-    pos[:, :, 1], angles = initial_value
+    pos[:, 1], angles = initial_value
 
     # Normalized velocities (average kinetic energy = 1)
-    vx = cos.(angles) * sqrt(2)
-    vy = sin.(angles) * sqrt(2)
-    velocity[:, :, 1] = transpose([vx vy])
+    velocity[:, 1] = exp.(complex.(0, angles)) * sqrt(2)
 
     for i in 1:numberOfIterations, j in 1:numberOfParticles
-        distance = sqrt(pos[1,j,i]^2 + pos[2,j,i]^2)
+        distance = abs(pos[j, i])
         if distance > radius
-            acceleration = -KK * ((distance - radius)/distance) * pos[:, j, i]
+            acceleration = -KK * ((distance - radius)/distance) * pos[j, i]
         else
-            acceleration = [0, 0]
+            acceleration = 0
         end
 
         for k in 1:numberOfParticles
@@ -72,22 +64,20 @@ function billiard(
                 continue
             end
             lennard_jones_force = lennard_jones(
-                pos[1, j, i],
-                pos[2, j, i],
-                pos[1, k, i],
-                pos[2, k, i],
+                pos[j, i],
+                pos[k, i],
                 epsilon,
             )
             acceleration += lennard_jones_force
         end
 
-        pos[:, j, i+1] = pos[:, j, i] + velocity[:, j, i]*dt + acceleration*dt^2 / 2
+        pos[j, i+1] = pos[j, i] + velocity[j, i]*dt + acceleration*dt^2 / 2
 
-        distance = sqrt(pos[1, j, i+1]^2 + pos[2, j, i+1]^2)
+        distance = abs(pos[j, i+1])
         if distance > radius
-            acceleration2 = -KK * ((distance - radius)/distance) * pos[:, j, i+1]
+            acceleration2 = -KK * ((distance - radius)/distance) * pos[j, i+1]
         else
-            acceleration2 = [0, 0]
+            acceleration2 = 0
         end
 
         for k in 1:numberOfParticles
@@ -95,34 +85,30 @@ function billiard(
                 continue
             end
             lennard_jones_force = lennard_jones(
-                pos[1, j, i+1],
-                pos[2, j, i+1],
-                pos[1, k, i],
-                pos[2, k, i],
+                pos[j, i+1],
+                pos[k, i],
                 epsilon,
             )
             acceleration2 += lennard_jones_force
         end
 
-        velocity[:, j, i+1] = velocity[:, j, i] + (acceleration + acceleration2)/2 * dt
+        velocity[j, i+1] = velocity[j, i] + (acceleration + acceleration2)/2 * dt
     end
 
     return pos, velocity
 end
 
-function potential(x, y, radius, KK)
-    distance = sqrt(x^2 + y^2)
+function potential(pos, radius, KK)
+    distance = abs(pos)
     if distance <= radius
         return 0
     end
     return (distance - radius)^2 * KK / 2
 end
 
-function energy(x, y, vel_x, vel_y, radius, KK)
-    pot = potential(x, y, radius, KK)
-    total_vel_square = vel_x^2 + vel_y^2
-
-    return 0.5*total_vel_square + pot
+function energy(pos, vel, radius, KK)
+    pot = potential(pos, radius, KK)
+    return 0.5*abs2(vel) + pot
 end
 
 function estimate_distribution(collection)

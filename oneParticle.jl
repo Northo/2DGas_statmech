@@ -52,7 +52,7 @@ println("PyPlot loaded.")
 
 for (i, dt) in enumerate(dt_list)
     t = 0:dt:total_time
-    plt.plot(positions[i][1, 1, :], positions[i][2, 1, :], label=dt)
+    plt.plot(real(positions[i][1, :]), imag(positions[i][1, :]), label=dt)
 end
 
 circ=plt.Circle((0, 0), radius=radius, fill=false)
@@ -64,8 +64,8 @@ legend()
 pos = positions[1]
 vel = velocities[1]
 
-engy = energy.(pos[1, 1, :], pos[2, 1, :], vel[1, 1, :], vel[2, 1, :], radius, KK)
-pot = potential.(pos[1, 1, :], pos[2, 1, :], radius, KK)
+engy = energy.(pos[1, :], vel[1, :], radius, KK)
+pot = potential.(pos[1, :], radius, KK)
 
 plt.figure()
 plt.plot(engy)
