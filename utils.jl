@@ -17,11 +17,24 @@ function lennard_jones(pos1_x, pos1_y, pos2_x, pos2_y, epsilon)
     if distance > 1
         return [0, 0]
     else
-        strength = 12*epsilon * (1/distance^13 - 1/distance^7)
+        strength = 12*epsilon * (-1/distance^13 + 1/distance^7)
         return [dx, dy] * strength
     end
 end
 
+function lennard_jones_potential(pos1_x, pos1_y, pos2_x, pos2_y, epsilon)
+    dx = pos2_x - pos1_x
+    dy = pos2_y - pos1_y
+
+    distance = sqrt(
+        (dx)^2 + (dy)^2
+    )
+    if distance > 1
+        return 0
+    else
+        return epsilon * (1/distance^12 - 2/distance^6 + 1)
+    end
+end
 
 function billiard(
     numberOfParticles,
