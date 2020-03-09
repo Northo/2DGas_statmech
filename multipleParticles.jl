@@ -9,25 +9,18 @@ using DelimitedFiles
 #########
 SAVE_DATA = false
 DATA_DIR = "datadir/"
+FIG_DIR = "media/"
 FIT = false
 
-num_particles = 10
+num_particles = 2
+num_particles_word = "five"
 radius = 10
 KK = 15
-total_time = 200
-dt = 0.001
+total_time = 400
+dt = 0.005
 num_iterations = floor(Int, total_time / dt)
 
 epsilon = 0.5
-#initial_vals = initial_values(num_particles, radius)
-initial_vals = safe_initial_values(num_particles, radius)
-# initial_vals = [
-#     [5 -7;
-#      5 -7],
-#     [0, -pi]
-# ]
-
-println("Inital_values: ", initial_vals)
 
 ################
 # Calculations #
@@ -40,7 +33,6 @@ pos, vel = billiard(
     radius,
     dt,
     KK,
-    initial_value=initial_vals,
     epsilon=epsilon,
 )
 
@@ -95,18 +87,30 @@ println("PyPlot loaded.")
 ## Trajectory ##
 trajectory_fig, trajectory_ax = plt.subplots()
 for i in 1:num_particles
-    trajectory_ax.scatter(real(pos[i, 1:100:end]), imag(pos[i, 1:100:end]), label=string("Particle", i), s=1, c="#aaaaaa")
+    #trajectory_ax.scatter(real(pos[i, 1:100:end]), imag(pos[i, 1:100:end]), label=string("Particle", i), s=1, c="#aaaaaa")
+    trajectory_ax.plot(real(pos[i, 1:100:end]), imag(pos[i, 1:100:end]), label=string("Particle", i))
 end
 
 circ=plt.Circle((0, 0), radius=radius, fill=false)
 plt.gca().add_artist(circ)
-#plt.gca().set_aspect("equal")
+plt.gca().set_aspect("equal")
 #trajectory_ax.legend()
+plt.xlabel("x")
+plt.ylabel("y")
+plt.title(string(num_particles, " particles, T = ", total_time))
+plt.savefig(string(FIG_DIR, "trajectory_", num_particles_word ,"_particles.pdf"))
 trajectory_fig.show()
 
-## Energy validation ##
-engy_fig, engy_ax = plt.subplots()
-engy_ax.plot(relative_energy_error)
-engy_fig.show()
+## Energy distribution ##
+plt.subplots()
+for i in 1:num_particles
+    plt.plot(engy[i, :])
+end
+plt.show()
+
+# ## Energy validation ##
+# engy_fig, engy_ax = plt.subplots()
+# engy_ax.plot(relative_energy_error)
+# engy_fig.show()
 
 #plot_velocity_distributions(vel)

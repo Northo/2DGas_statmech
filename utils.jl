@@ -1,22 +1,29 @@
-function initial_values(numberOfParticles, radius)
-    radii = rand((0.0:radius), numberOfParticles)
-    radii = complex.(0, radii)
-    angles = rand((-pi:pi), numberOfParticles)
-    pos = radii .* exp.(complex.(0, angles))
+function generate_initial_positions(numberOfParticles, radius)
+    radii = rand((0.0:radius), numberOfParticles) .+ 0im
+    angles = rand((-pi:pi), numberOfParticles)*im
+    pos = radii .* exp.(angles)
 
-    angles_vel = rand((-pi:pi), numberOfParticles)
-    return pos, angles_vel
+    return pos
 end
 
 
+function generate_initial_velocities(numberOfParticles)
+    angles = rand((-pi:pi), numberOfParticles)*im
+    # Normalized velocities (average kinetic energy = 1)
+    return exp.(angles) * sqrt(2)
+ end
+
+
 function safe_initial_values(numberOfParticles, radius)
-    """Generate 'safe' initial values, where noe particles starts too close"""
+    """Deprecated. Generate 'safe' initial values, where noe particles starts too close"""
     angles = range(0, 2*pi, length=numberOfParticles)*im
     radii = range(0.1, 0.9, length=numberOfParticles) .* radius .+ 0im
     pos = radii .* exp.(angles)
-    angles_vel = rand((-pi:pi), numberOfParticles)
 
-    return pos, angles_vel
+    angles_vel = rand((-pi:pi), numberOfParticles)*im
+    velocities = exp.(angles_vel)
+
+    return pos, velocities
 end
 
 
@@ -47,20 +54,24 @@ function billiard(
     radius,
     dt,
     KK;
-    initial_value=nothing,
+    initial_positions=nothing,
+    initial_velocities=nothing,
     epsilon=1,
 )
 
-    if (isnothing(initial_value))
-        initial_value = initial_values(numberOfParticles, radius)
+    if (isnothing(initial_positions))
+        initial_positions = generate_initial_positions(numberOfParticles, radius)
     end
+
+    if (isnothing(initial_velocities))
+        initial_velocities = generate_initial_velocities(numberOfParticles)
+    end
+
     pos = zeros(Complex, numberOfParticles, numberOfIterations+1)
     velocity = Array{Complex, 2}(undef, numberOfParticles, numberOfIterations+1)
 
-    pos[:, 1], angles = initial_value
-
-    # Normalized velocities (average kinetic energy = 1)
-    velocity[:, 1] = exp.(complex.(0, angles)) * sqrt(2)
+    pos[:, 1] = initial_positions
+    velocity[:, 1] = initial_velocities
 
     for i in 1:numberOfIterations, j in 1:numberOfParticles
         distance = abs(pos[j, i])
