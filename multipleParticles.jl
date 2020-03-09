@@ -36,6 +36,29 @@ pos, vel = billiard(
     epsilon=epsilon,
 )
 
+# Numerical validation
+x, y = pos[1, :, :], pos[2, :, :]  # x and y still has dimensions for particles and iterations!
+vel_x, vel_y = vel[1, :, :], pos[2, :, :]
+
+engy = energy.(x, y, vel_x, vel_y, radius, KK)  # Not including interactions between particles
+interaction_energy = zero(engy)
+for i in 1:num_particles, j in 1:num_particles
+    if i==j
+        continue
+    end
+    interaction_energy[i, :] += lennard_jones_potential.(
+        x[i, :],
+        y[i, :],
+        x[j, :],
+        y[j, :],
+        epsilon,
+    )
+end
+
+total_energy = sum(engy + interaction_energy, dims=2)
+relative_energy_error = (total_energy .- total_energy[1]) ./ total_energy[1]
+
+
 ###################
 # Writing results #
 ###################
@@ -47,12 +70,20 @@ println("Loading PyPlot...")
 using PyPlot
 println("PyPlot loaded.")
 
+
+## Trajectory ##
+trajectory_fig, trajectory_ax = plt.subplots()
 for i in 1:num_particles
-    plt.plot(pos[1, i, 1:100:end], pos[2, i, 1:100:end], label=string("Particle", i))
+    trajectory_ax.plot(pos[1, i, 1:100:end], pos[2, i, 1:100:end], label=string("Particle", i))
 end
 
 circ=plt.Circle((0, 0), radius=radius, fill=false)
 plt.gca().add_artist(circ)
 #plt.gca().set_aspect("equal")
-plt.legend()
-plt.show()
+trajectory_ax.legend()
+trajectory_fig.show()
+
+## Energy validation ##
+engy_fig, engy_ax = plt.subplots()
+engy_ax.plot(relative_energy_error)
+engy_fig.show()
