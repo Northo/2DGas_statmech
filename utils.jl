@@ -9,6 +9,17 @@ function initial_values(numberOfParticles, radius)
 end
 
 
+function safe_initial_values(numberOfParticles, radius)
+    """Generate 'safe' initial values, where noe particles starts too close"""
+    angles = range(0, 2*pi, length=numberOfParticles)*im
+    radii = range(0.1, 0.9, length=numberOfParticles) .* radius .+ 0im
+    pos = radii .* exp.(angles)
+    angles_vel = rand((-pi:pi), numberOfParticles)
+
+    return pos, angles_vel
+end
+
+
 function lennard_jones(pos1, pos2, epsilon)
     """Calculates the lennard_jones force"""
     distance = abs(pos2 - pos1)
@@ -135,4 +146,26 @@ function get_interaction_potential(pos, epsilon)
     end
 
     return interaction_energy
+end
+
+function plot_velocity_distributions(vel)
+    vel_distribution_fig, vel_distribution_ax = plt.subplots()
+
+    vel_x = real.(vel)
+    v_min, v_max = minimum(vel_x), maximum(vel_x)
+    v_list = range(v_min, v_max, length=100)
+
+    # Boltzman dist.
+    kbT = mean(x->x^2, vel_x)  # From equipartition thm.
+    boltzman_std = sqrt(kbT)
+    boltzman_dist = Normal(0, boltzman_std)
+
+    plt.hist(collect(Iterators.flatten(vel_x)), bins=40, density=true, label="Simulated distribution")
+    plt.plot(v_list, Distributions.pdf.(boltzman_dist, v_list), label="Boltzman distribution")
+    if FIT
+        plt.plot(v_list, Distributions.pdf.(fit_velocity_distribution, v_list), label="Fitted curve")
+    end
+    plt.legend()
+    plt.show()
+
 end
