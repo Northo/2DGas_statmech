@@ -124,3 +124,10 @@ function energy(x, y, vel_x, vel_y, radius, KK)
 
     return 0.5*total_vel_square + pot
 end
+
+function estimate_distribution(collection)
+    """Given a collection, estimate the distribution of the quantity it containts.
+    The colletion must have the shape (numberOfParticles, numberOfIterations)"""
+
+    return mean(collection)
+end

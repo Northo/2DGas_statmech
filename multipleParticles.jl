@@ -1,15 +1,17 @@
 """This program investigates the problems conserning one particle"""
 
 include("utils.jl")
+using Statistics  # Used for mean
+using Distributions  # fit
 #########
 # Setup #
 #########
 
-num_particles = 2
+num_particles = 10
 radius = 10
-KK = 5
-total_time = 100
-dt = 0.0001
+KK = 15
+total_time = 200
+dt = 0.001
 num_iterations = floor(Int, total_time / dt)
 
 epsilon = 0.5
@@ -26,6 +28,7 @@ println("Inital_values: ", initial_vals)
 # Calculations #
 ################
 
+println("Calculating trajectories...")
 pos, vel = billiard(
     num_particles,
     num_iterations,
@@ -37,6 +40,7 @@ pos, vel = billiard(
 )
 
 # Numerical validation
+println("Calculating energy for validation...")
 x, y = pos[1, :, :], pos[2, :, :]  # x and y still has dimensions for particles and iterations!
 vel_x, vel_y = vel[1, :, :], pos[2, :, :]
 
@@ -58,6 +62,17 @@ end
 total_energy = sum(engy + interaction_energy, dims=2)
 relative_energy_error = (total_energy .- total_energy[1]) ./ total_energy[1]
 
+
+## Estimating velocity distribution ##
+velocity_distribution = collect(Iterators.flatten(vel_x))
+println(typeof(velocity_distribution))
+fit_velocity_distribution = fit(Normal, velocity_distribution)
+μ, σ = fit_velocity_distribution.μ, fit_velocity_distribution.σ
+#println("Fitted: ", μ, σ)
+println("Mean of vel_x: ", mean(vel_x))
+println("Mean of vel_x^2: ", mean(x->x^2, vel_x))
+println("Mean of x: ", mean(x))
+println("RMS of x: ", sqrt(mean(x->x^2, x)))
 
 ###################
 # Writing results #
@@ -87,3 +102,18 @@ trajectory_fig.show()
 engy_fig, engy_ax = plt.subplots()
 engy_ax.plot(relative_energy_error)
 engy_fig.show()
+
+vel_distribution_fig, vel_distribution_ax = plt.subplots()
+v_min, v_max = minimum(vel_x), maximum(vel_x)
+v_list = range(v_min, v_max, length=100)
+
+# Boltzman dist.
+kbT = mean(x->x^2, vel_x)  # From equipartition thm.
+boltzman_std = sqrt(kbT)
+boltzman_dist = Normal(0, boltzman_std)
+
+plt.hist(collect(Iterators.flatten(vel_x)), bins=40, density=true, label="Simulated distribution")
+plt.plot(v_list, Distributions.pdf.(fit_velocity_distribution, v_list), label="Fitted curve")
+plt.plot(v_list, Distributions.pdf.(boltzman_dist, v_list), label="Boltzman distribution")
+plt.legend()
+plt.show()
