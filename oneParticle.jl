@@ -1,6 +1,6 @@
 """This program investigates the problems conserning one particle"""
 
-include("verlet.jl")
+include("utils.jl")
 #########
 # Setup #
 #########
