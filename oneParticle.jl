@@ -7,7 +7,7 @@ include("utils.jl")
 
 num_particles = 1
 radius = 10
-KK = 5
+KK = 10
 total_time = 200
 
 #dt = 0.005
@@ -17,7 +17,13 @@ total_time = 200
 ################
 # Calculations #
 ################
-dt_list = [0.005, 0.01, 0.05, 0.1, 0.6]
+dt_list = [
+    0.005,
+    0.01,
+    0.05,
+    0.1,
+#    0.6,
+]
 
 positions = []
 velocities = []
@@ -57,18 +63,20 @@ end
 
 circ=plt.Circle((0, 0), radius=radius, fill=false)
 gca().add_artist(circ)
-gca().set_aspect("equal")
+#gca().set_aspect("equal")
+plt.title("Trajectories")
 legend()
 #show()
 
-pos = positions[1]
-vel = velocities[1]
-
-engy = energy.(pos[1, :], vel[1, :], radius, KK)
-pot = potential.(pos[1, :], radius, KK)
+#energies = [energy.(positions[i][1, :], velocities[i][1, :], radius, KK) for i in eachindex(dt_list)]
 
 plt.figure()
-plt.plot(engy)
+for (i, dt) in enumerate(dt_list)
+    engy = energy.(positions[i][1, :], velocities[i][1, :], radius, KK)
+    plt.plot(0:dt:total_time, relative_error(engy), label=dt)
+end
+plt.legend()
+plt.title("Energy")
 plt.show()
 
 # for (i, dt) in enumerate(dt_list)

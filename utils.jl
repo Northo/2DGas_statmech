@@ -111,9 +111,7 @@ function energy(pos, vel, radius, KK)
     return 0.5*abs2(vel) + pot
 end
 
-function estimate_distribution(collection)
-    """Given a collection, estimate the distribution of the quantity it containts.
-    The colletion must have the shape (numberOfParticles, numberOfIterations)"""
-
-    return mean(collection)
+function relative_error(a::Vector)
+    """Returns a list of the relative error with respect to the first element"""
+    return (a .- a[1])/a[1]
 end
