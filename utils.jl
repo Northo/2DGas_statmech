@@ -54,8 +54,9 @@ function billiard(
 
     pos[:, :, 1], angles = initial_value
 
-    vx = cos.(angles)
-    vy = sin.(angles)
+    # Normalized velocities (average kinetic energy = 1)
+    vx = cos.(angles) * sqrt(2)
+    vy = sin.(angles) * sqrt(2)
     velocity[:, :, 1] = transpose([vx vy])
 
     for i in 1:numberOfIterations, j in 1:numberOfParticles
