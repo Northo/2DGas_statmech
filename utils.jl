@@ -115,3 +115,24 @@ function relative_error(a::Vector)
     """Returns a list of the relative error with respect to the first element"""
     return (a .- a[1])/a[1]
 end
+
+function get_interaction_potential(pos, epsilon)
+    """Given list of positions, with shape pos[num_particles, num_iterations],
+    returns list with interaction potential for each particle, with the same shape"""
+
+    interaction_energy = zero(pos)
+    num_particles, num_iterations = size(pos)
+
+    for i in 1:num_particles, j in 1:num_particles
+        if i==j
+            continue
+        end
+        interaction_energy[i, :] += lennard_jones_potential.(
+            pos[i, :],
+            pos[j, :],
+            epsilon,
+        )
+    end
+
+    return interaction_energy
+end

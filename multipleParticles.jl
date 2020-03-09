@@ -7,7 +7,7 @@ using DelimitedFiles
 #########
 # Setup #
 #########
-SAVE_DATA = true
+SAVE_DATA = false
 DATA_DIR = "datadir/"
 
 num_particles = 10
@@ -47,17 +47,7 @@ println("Calculating energy for validation...")
 
 engy = energy.(pos, vel, radius, KK)  # Not including interactions between particles
 
-interaction_energy = zero(engy)
-for i in 1:num_particles, j in 1:num_particles
-    if i==j
-        continue
-    end
-    interaction_energy[i, :] += lennard_jones_potential.(
-        pos[i, :],
-        pos[j, :],
-        epsilon,
-    )
-end
+interaction_energy = get_interaction_potential(pos, epsilon)
 
 total_energy = sum(engy + interaction_energy, dims=2)
 relative_energy_error = (total_energy .- total_energy[1]) ./ total_energy[1]
@@ -103,7 +93,7 @@ println("PyPlot loaded.")
 ## Trajectory ##
 trajectory_fig, trajectory_ax = plt.subplots()
 for i in 1:num_particles
-    trajectory_ax.plot(real(pos[i, 1:100:end]), imag(pos[i, 1:100:end]), label=string("Particle", i))
+    trajectory_ax.scatter(real(pos[i, 1:100:end]), imag(pos[i, 1:100:end]), label=string("Particle", i))
 end
 
 circ=plt.Circle((0, 0), radius=radius, fill=false)
