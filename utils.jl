@@ -7,6 +7,7 @@ function generate_initial_positions(numberOfParticles, radius)
 end
 
 
+
 function generate_initial_velocities(numberOfParticles)
     angles = rand((-pi:pi), numberOfParticles)*im
     # Normalized velocities (average kinetic energy = 1)
@@ -14,16 +15,12 @@ function generate_initial_velocities(numberOfParticles)
  end
 
 
-function safe_initial_values(numberOfParticles, radius)
+function safe_initial_positions(numberOfParticles, radius)
     """Deprecated. Generate 'safe' initial values, where noe particles starts too close"""
-    angles = range(0, 2*pi, length=numberOfParticles)*im
     radii = range(0.1, 0.9, length=numberOfParticles) .* radius .+ 0im
+    angles = range(0, 2*pi, length=numberOfParticles)*im
     pos = radii .* exp.(angles)
-
-    angles_vel = rand((-pi:pi), numberOfParticles)*im
-    velocities = exp.(angles_vel)
-
-    return pos, velocities
+    return pos
 end
 
 
@@ -142,7 +139,7 @@ function get_interaction_potential(pos, epsilon)
     """Given list of positions, with shape pos[num_particles, num_iterations],
     returns list with interaction potential for each particle, with the same shape"""
 
-    interaction_energy = zero(pos)
+    interaction_energy = zeros(Float64, size(pos))
     num_particles, num_iterations = size(pos)
 
     for i in 1:num_particles, j in 1:num_particles
@@ -159,24 +156,61 @@ function get_interaction_potential(pos, epsilon)
     return interaction_energy
 end
 
-function plot_velocity_distributions(vel)
+function plot_velocity_distributions(vel, fit_distribution=nothing)
     vel_distribution_fig, vel_distribution_ax = plt.subplots()
 
     vel_x = real.(vel)
-    v_min, v_max = minimum(vel_x), maximum(vel_x)
-    v_list = range(v_min, v_max, length=100)
+    v_lim = maximum(abs.(vel_x))
+    v_list = range(-v_lim, v_lim, length=100)
 
     # Boltzman dist.
-    kbT = mean(x->x^2, vel_x)  # From equipartition thm.
-    boltzman_std = sqrt(kbT)
-    boltzman_dist = Normal(0, boltzman_std)
+    boltzman_dist = Normal(0, 1)
 
     plt.hist(collect(Iterators.flatten(vel_x)), bins=40, density=true, label="Simulated distribution")
-    plt.plot(v_list, Distributions.pdf.(boltzman_dist, v_list), label="Boltzman distribution")
-    if FIT
-        plt.plot(v_list, Distributions.pdf.(fit_velocity_distribution, v_list), label="Fitted curve")
+    plt.plot(
+        v_list,
+        Distributions.pdf.(boltzman_dist, v_list),
+        label="Boltzman distribution",
+    )
+    if !isnothing(fit_distribution)
+        plt.plot(v_list, fit_distribution(v_list), label="Fitted curve")
     end
-    plt.legend()
-    plt.show()
 
+    # Add some info
+
+    plt.text(
+        -7, 0.2,
+        @sprintf("Mean \$v_x\$: %.3f\nRMS \$v\$: %.3f", mean(vel_x), sqrt(mean(abs2, vel))),
+        bbox = Dict("boxstyle"=>"round", "ec"=>(1., 0.5, 0.5), "fc"=>(1., 0.8, 0.8))
+    )
+
+    plt.legend()
+    plt.xlabel("\$v_x\$")
+    plt.ylabel("\$P(v_x)\$")
+end
+
+
+function plot_trajectories(pos, scatter=false, figname=nothing)
+    num_particles, num_iterations = size(pos)
+
+    trajectory_fig, trajectory_ax = plt.subplots()
+    for i in 1:num_particles
+        if scatter
+            trajectory_ax.scatter(real(pos[i, 1:100:end]), imag(pos[i, 1:100:end]), label=string("Particle", i), s=1, c="#aaaaaa")
+        else
+            trajectory_ax.plot(real(pos[i, 1:100:end]), imag(pos[i, 1:100:end]), label=string("Particle", i))
+        end
+    end
+
+    circ=plt.Circle((0, 0), radius=radius, fill=false)
+    plt.gca().add_artist(circ)
+    plt.gca().set_aspect("equal")
+    #trajectory_ax.legend()
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.title(string(num_particles, " particles, T = ", total_time))
+    if !isnothing(figname)
+        plt.savefig(figname)
+    end
+    trajectory_fig.show()
 end

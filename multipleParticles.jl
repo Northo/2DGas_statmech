@@ -1,9 +1,11 @@
-"""This program investigates the problems conserning one particle"""
+"""This program investigates the problems conserning multiple particles"""
 
 include("utils.jl")
 using Statistics  # Used for mean
 using Distributions  # fit
 using DelimitedFiles
+using Printf
+
 #########
 # Setup #
 #########
@@ -12,15 +14,17 @@ DATA_DIR = "datadir/"
 FIG_DIR = "media/"
 FIT = false
 
-num_particles = 2
+num_particles = 10
 num_particles_word = "five"
 radius = 10
 KK = 15
-total_time = 400
+total_time = 100
 dt = 0.005
 num_iterations = floor(Int, total_time / dt)
 
 epsilon = 0.5
+#initial_velocities = zeros(num_particles)
+#initial_velocities[1] = sqrt(num_particles*2)
 
 ################
 # Calculations #
@@ -34,6 +38,8 @@ pos, vel = billiard(
     dt,
     KK,
     epsilon=epsilon,
+    initial_positions=safe_initial_positions(num_particles, radius),
+#    initial_velocities=initial_velocities
 )
 
 # Numerical validation
@@ -62,6 +68,11 @@ end
 
 println("Mean of vel_x: ", mean(vel_x))
 println("Mean of vel_x^2: ", mean(x->x^2, vel_x))
+println("RMS of vel_x: ", sqrt(mean(x->x^2, vel_x)))
+println("RMS of 0.5*vel: ", sqrt(0.5*mean(
+    abs2,
+    vel,
+)))
 println("Mean of x: ", mean(x))
 println("RMS of x: ", sqrt(mean(x->x^2, x)))
 
@@ -85,27 +96,16 @@ println("PyPlot loaded.")
 
 
 ## Trajectory ##
-trajectory_fig, trajectory_ax = plt.subplots()
-for i in 1:num_particles
-    #trajectory_ax.scatter(real(pos[i, 1:100:end]), imag(pos[i, 1:100:end]), label=string("Particle", i), s=1, c="#aaaaaa")
-    trajectory_ax.plot(real(pos[i, 1:100:end]), imag(pos[i, 1:100:end]), label=string("Particle", i))
-end
-
-circ=plt.Circle((0, 0), radius=radius, fill=false)
-plt.gca().add_artist(circ)
-plt.gca().set_aspect("equal")
-#trajectory_ax.legend()
-plt.xlabel("x")
-plt.ylabel("y")
-plt.title(string(num_particles, " particles, T = ", total_time))
-plt.savefig(string(FIG_DIR, "trajectory_", num_particles_word ,"_particles.pdf"))
-trajectory_fig.show()
+plot_trajectories(pos)
 
 ## Energy distribution ##
 plt.subplots()
 for i in 1:num_particles
-    plt.plot(engy[i, :])
+    plt.plot(0:dt:total_time, engy[i, :])
 end
+plt.xlabel("Time")
+plt.ylabel("Energy")
+#plt.savefig(string(FIG_DIR, "energy_dispersion.pdf"))
 plt.show()
 
 # ## Energy validation ##
@@ -113,4 +113,6 @@ plt.show()
 # engy_ax.plot(relative_energy_error)
 # engy_fig.show()
 
-#plot_velocity_distributions(vel)
+plot_velocity_distributions(vel)
+plt.savefig(string(FIG_DIR, "distribution.pdf"))
+plt.show()
