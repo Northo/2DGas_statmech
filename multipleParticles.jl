@@ -96,17 +96,10 @@ println("PyPlot loaded.")
 
 
 ## Trajectory ##
-plot_trajectories(pos)
+#plot_trajectories(pos)
 
 ## Energy distribution ##
-plt.subplots()
-for i in 1:num_particles
-    plt.plot(0:dt:total_time, engy[i, :])
-end
-plt.xlabel("Time")
-plt.ylabel("Energy")
-#plt.savefig(string(FIG_DIR, "energy_dispersion.pdf"))
-plt.show()
+#plot_energy_distribution(engy)
 
 # ## Energy validation ##
 # engy_fig, engy_ax = plt.subplots()

@@ -214,3 +214,18 @@ function plot_trajectories(pos, scatter=false, figname=nothing)
     end
     trajectory_fig.show()
 end
+
+
+function plot_energy_distribution(energies, figname=nothing)
+    plt.subplots()
+    num_particles, num_iterations = size(energies)
+    for i in 1:num_particles
+        plt.plot(0:dt:total_time, energies[i, :])
+    end
+    plt.xlabel("Time")
+    plt.ylabel("Energy")
+    if !isnothing(figname)
+        plt.savefig(figname)
+    end
+    plt.show()
+end
