@@ -156,7 +156,7 @@ function get_interaction_potential(pos, epsilon)
     return interaction_energy
 end
 
-function plot_velocity_distributions(vel, fit_distribution=nothing)
+function plot_velocity_distributions(vel, fit_distribution=nothing; figname=nothing)
     vel_distribution_fig, vel_distribution_ax = plt.subplots()
 
     vel_x = real.(vel)
@@ -178,19 +178,24 @@ function plot_velocity_distributions(vel, fit_distribution=nothing)
 
     # Add some info
 
-    plt.text(
-        -7, 0.2,
-        @sprintf("Mean \$v_x\$: %.3f\nRMS \$v\$: %.3f", mean(vel_x), sqrt(mean(abs2, vel))),
+    plt.annotate(
+        @sprintf("\$k_BT\$ from simulation : %.3f", mean(abs2, vel)/2),
+        (0.35, 0.25),
+        xycoords="figure fraction",
         bbox = Dict("boxstyle"=>"round", "ec"=>(1., 0.5, 0.5), "fc"=>(1., 0.8, 0.8))
     )
 
     plt.legend()
     plt.xlabel("\$v_x\$")
     plt.ylabel("\$P(v_x)\$")
+    if !isnothing(figname)
+        plt.savefig(figname)
+    end
+    plt.show()
 end
 
 
-function plot_trajectories(pos, scatter=false, figname=nothing)
+function plot_trajectories(pos; scatter=false, figname=nothing)
     num_particles, num_iterations = size(pos)
 
     trajectory_fig, trajectory_ax = plt.subplots()

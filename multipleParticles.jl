@@ -18,8 +18,8 @@ num_particles = 10
 num_particles_word = "five"
 radius = 10
 KK = 15
-total_time = 100
-dt = 0.005
+total_time = 600
+dt = 0.003
 num_iterations = floor(Int, total_time / dt)
 
 epsilon = 0.5
@@ -43,13 +43,12 @@ pos, vel = billiard(
 )
 
 # Numerical validation
-println("Calculating energy for validation...")
+# println("Calculating energy for validation...")
 
-engy = energy.(pos, vel, radius, KK)  # Not including interactions between particles
-interaction_energy = get_interaction_potential(pos, epsilon)
-
-total_energy = sum(engy + interaction_energy, dims=2)
-relative_energy_error = (total_energy .- total_energy[1]) ./ total_energy[1]
+# engy = energy.(pos, vel, radius, KK)  # Not including interactions between particles
+# interaction_energy = get_interaction_potential(pos, epsilon)
+# total_energy = sum(engy + interaction_energy, dims=2)
+# relative_energy_error = (total_energy .- total_energy[1]) ./ total_energy[1]
 
 x = real.(pos)
 vel_x = real.(vel)
@@ -96,7 +95,7 @@ println("PyPlot loaded.")
 
 
 ## Trajectory ##
-#plot_trajectories(pos)
+plot_trajectories(pos, scatter=true)
 
 ## Energy distribution ##
 #plot_energy_distribution(engy)
@@ -106,6 +105,5 @@ println("PyPlot loaded.")
 # engy_ax.plot(relative_energy_error)
 # engy_fig.show()
 
-plot_velocity_distributions(vel)
-plt.savefig(string(FIG_DIR, "distribution.pdf"))
+plot_velocity_distributions(vel, figname=string(FIG_DIR, "distribution.pdf"))
 plt.show()
